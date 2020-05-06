@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import './App.css';
 import socketIOClient from "socket.io-client";
 // const socket = socketIOClient("http://localhost:5000");
-const socket = socketIOClient("https://git.heroku.com/chatlog-back-end.git");
+const socket = socketIOClient("https://chatlog-back-end.herokuapp.com/");
 const moment = require('moment');
 
 function App() {
