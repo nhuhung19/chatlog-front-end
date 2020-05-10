@@ -1,86 +1,66 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
-import socketIOClient from "socket.io-client";
-// const socket = socketIOClient("http://localhost:5000");
-const socket = socketIOClient("https://chatlog-back-end.herokuapp.com/");
-const moment = require('moment');
+import Header from "./components/Header"
+import Rooms from "./components/Rooms"
+import Home from "./components/Home"
+import Chat from "./components/Chat"
+import { Route, Switch, Link } from "react-router-dom";
+import socket from "./utils/socket"
+// const socket = socketIOClient("https://chatlog-back-end.herokuapp.com/");
 
 function App() {
-  const [chat, setChat] = useState("")
-  const [chatLog, setChatLog] = useState([])
-  const [name, setName] = useState("Unknown")
-  const chatLogRef = useRef(chatLog)
-
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
-    let user = prompt("please enter your name")
-    if (user === "") {
-      user = "Unknown"
-    }
-    setName(user)
-    console.log(name)
-    chatConnection()
+    askUser()
   }, [])
 
-  const chatConnection = () => {
-    socket.on("messages", (msg) => {
-      chatLogRef.current.push(msg)
-      setChatLog([...chatLogRef.current])
-    })
-  }
-
-  const handleChange = (e) => {
-    // console.log(e.target)
-    setChat(e.target.value)
-  }
-
-  const submitChat = (e) => {
-    // console.log(name)
-    moment.unix(Number)
-    e.preventDefault()
-    let timeCreate = new Date().getTime()
-    let chatObj = {
-      text: chat,
-      name: name,
-      createdAt: moment(timeCreate, "x").format("L LTS")
+  const askUser = () => {
+    let userName = prompt("please enter your name")
+    if (!userName) {
+      return askUser()
     }
-    socket.emit("chat", chatObj, err => {
-      if (err) {
-        console.log(err)
-      } else {
-        console.log("chat was sent")
+
+    socket.emit("login", userName, res => {
+      if (res && !res.ok) return alert("Cannot login")
+      else {
+        setUser(res.data)
       }
     })
-    setChat("")
   }
-
-  const chatRender = () => {
-    return chatLog.map((el, i) => <p key={i}><span className="text-success">{el.createdAt} </span><strong>{el.name}</strong>: {el.text} </p>)
+  const leaveRoom = () => {
+    socket.emit("leaveRoom", null, res => {
+      if (res && res.ok) {
+        console.log(res.error)
+      }
+    })
   }
-
 
   return (
     <div className="w-100 h-100">
-      <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">Chat App Pro</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
+      <nav className="navbar navbar-expand-lg navbar-light bg-light">
+        <a className="navbar-brand">Chat App Pro</a>
+        <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span className="navbar-toggler-icon"></span>
         </button>
-
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div className="collapse navbar-collapse" id="navbarSupportedContent">
         </div>
       </nav>
-      <div className=" w-100">
-        <div className="chatbox w-100">
-          <form className="w-75 mx-auto form-inline" onChange={handleChange} onSubmit={submitChat} action="">
-            <div class="w-75 form-group mx-sm-3 mb-2">
-              <input className="w-100 form-control" value={chat} name="chat" type="text" placeholder="send a message" />
-            </div>
-            <button type="submit" class="btn btn-primary mb-2">Send</button>
-          </form>
+      <div className="row w-100 h-100">
+        <div className="col-lg-2 border-right h-100">
+          <div className="side-bar">
+            <Header user={user} />
+            <Rooms />
+          </div>
+          <div className="footer-bar pb-5 pl-5">
+            <Link className="pb-5" to="/"> <button className="btn btn-outline-warning" onClick={leaveRoom}>Leave Room</button></Link>
+          </div>
         </div>
-        <div className="ml-5 mt-4 chat-log text-danger">
-          {chatRender()}
+        <div className="col-lg-10">
+          <Switch>
+            <Route path="/" exact render={() => <Home />} />
+            <Route path="/chat" exact user={user} render={(props) => <Chat {...props} />} />
+          </Switch>
         </div>
       </div>
     </div>

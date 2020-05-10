@@ -1,7 +1,15 @@
 .chatbox{
-  position: fixed;
-  bottom: 10px;
+  margin-bottom: 0;
+  height: 10vh;
 }
 .chat-log {
-  margin-bottom: 60px;
+  flex-grow: 1;
+  overflow-y: scroll;
+  height: 80vh;
+}
+.side-bar{
+  height: 75vh;
+}
+.footer-bar{
+  height: 10vh;
 }
